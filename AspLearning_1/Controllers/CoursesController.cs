@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using AspLearning_1.Context;
 using AspLearning_1.Entites;
+using AspLearning_1.Extensions;
+using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace AspLearning_1.Controllers
@@ -15,33 +18,33 @@ namespace AspLearning_1.Controllers
     using AspLearning_1.InterFaces;
     using AspLearning_1.Services;
 
-    public class CoursesController(IUnitOfWork  uow ,IMemoryCache memoryCache) : Controller
+    public class CoursesController(IUnitOfWork  uow ,IMemoryCache memoryCache,IDistributedCache cach) : Controller
     {
 
         private readonly ILogger<HomeController> _logger;
+       
+        private static string CachName = "Courses";
 
-        [ResponseCache(Duration = 60,Location = ResponseCacheLocation.Any,NoStore = false,VaryByHeader = "User-Agent",VaryByQueryKeys = new []{"Id","Name"})]
+        //[ResponseCache(Duration = 60,Location = ResponseCacheLocation.Any,NoStore = false,VaryByHeader = "User-Agent",VaryByQueryKeys = new []{"Id","Name"})] //Handelded by Client LIke Memory Cache
+        //[OutputCache(Duration = 60,PolicyName = "",VaryByQueryKeys = new []{"ProductId"})]//Use WebApi && Handeled By Server
         // GET: Courses
-        public  IActionResult Index()
+        public  async Task<IActionResult> Index()
         {
-            if (memoryCache.TryGetValue("Course",out List<Course>? result))
-            {
-                return this.View(result);
-            }
-            else
-            {
-                var courses = uow.Context.Set<Course>().
-                    Include(x => x.Author)
-                    .ToList();
-                memoryCache.Set("Course", courses,TimeSpan.FromSeconds(10));
-                return View(courses);
-            }
+           
+            var cacheOptions = new DistributedCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(20))
+                .SetSlidingExpiration(TimeSpan.FromMinutes(2));
+                var result = await cach.GetOrSetAsync<List<Course>>(CachName, () =>
+                {
+                    return Task.FromResult(uow.Context.Set<Course>().Include(x => x.Author).ToList());
+                }
+            );
+            
+            return View(result);
 
-    
         }
 
         // GET: Courses/Details/5
-        
+
         public  IActionResult Details(int? id)
         {
             var num = int.Parse(id.ToString());
@@ -84,7 +87,8 @@ namespace AspLearning_1.Controllers
            
             uow.Repository<Course>().Add(course);
             uow.Complete();
-            memoryCache.Remove("courses");
+                // memoryCache.Remove("courses");
+                cach.Remove(CachName);
             return RedirectToAction(nameof(Index));
         }
 
@@ -119,6 +123,7 @@ namespace AspLearning_1.Controllers
             }
             uow.Repository<Course>().Update(course);
             uow.Complete();
+
             return RedirectToAction(nameof(this.Index));
         }
 

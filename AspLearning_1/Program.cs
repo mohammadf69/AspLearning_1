@@ -6,7 +6,8 @@ using AspLearning_1.Services;
 using Serilog;
 using ElmahCore.Mvc;
 using ElmahCore.Sql;
-
+using Microsoft.AspNetCore.WebUtilities;
+using StackExchange.Redis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -29,6 +30,14 @@ builder.Services.AddElmah<SqlErrorLog>(opt =>
     );
 builder.Host.UseSerilog();
 builder.Services.AddResponseCaching();
+builder.Services.AddOutputCache();
+//Redis Configuration
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var configuration = ConfigurationOptions.Parse("localhost:6379", true);
+    return ConnectionMultiplexer.Connect(configuration);
+});
+
 //ADD DB Connection
 builder.Services.AddDbContext<Mycontext>(options =>
     {
@@ -66,8 +75,28 @@ app.UseRouting();
 app.UseResponseCaching();
 app.UseAuthorization();
 app.UseElmah();
+app.UseOutputCache();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.Run(async context =>
+{
+    //context.Response.Headers.ContentType = "Text/Html";
+    //if (context.Request.Method =="GET")
+    //{
+    //    if (context.Request.Query.ContainsKey("id"))
+    //    {
+    //        var id = context.Request.Query["id"];
+    //        await context.Response.WriteAsync($"<h1> id ==> {id} </h1>");
+    //    }
+    //}
+
+    var reader = new StreamReader(context.Request.Body);
+    var body = await reader.ReadToEndAsync();
+    var data = QueryHelpers.ParseQuery(body);
+
+
+} );
 
 app.Run();

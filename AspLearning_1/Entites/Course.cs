@@ -1,4 +1,6 @@
-﻿namespace AspLearning_1.Entites;
+﻿using System.Text.Json.Serialization;
+
+namespace AspLearning_1.Entites;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -13,7 +15,7 @@ public class Course()
     public  int AuthorId { get; set; }
     public  int  Level { get; set; }
     public  float FullPrice { get; set; } =0;
-
+    [JsonIgnore]
     public Author Author { get; set; }  // Navigation property
 
 
