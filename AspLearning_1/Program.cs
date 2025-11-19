@@ -1,16 +1,23 @@
 
 
+using System;
 using AspLearning_1.Context;
 using AspLearning_1.InterFaces;
+using AspLearning_1.MiddelWares;
 using AspLearning_1.Services;
 using Serilog;
 using ElmahCore.Mvc;
 using ElmahCore.Sql;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using StackExchange.Redis;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-
+using AspLearning_1.MiddelWares;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -31,6 +38,8 @@ builder.Services.AddElmah<SqlErrorLog>(opt =>
 builder.Host.UseSerilog();
 builder.Services.AddResponseCaching();
 builder.Services.AddOutputCache();
+builder.Services.AddTransient<CustomeMidelware>();
+builder.Services.AddTransient<ConvenstionlMiddelWare>();
 //Redis Configuration
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
@@ -79,24 +88,41 @@ app.UseOutputCache();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
-app.Run(async context =>
+//app.Use(async (context, @delegate) =>
+//{
+//    //Before Logic
+//    await @delegate(context);
+//    await context.Response.WriteAsync("MidelWare Eins");
+//    //After Logic
+//    await context.Response.WriteAsync("MidelWare Eins-Nach");
+//});
+//app.Use(async (HttpContext context, RequestDelegate next) =>
+//{
+//    //BEforeRequest
+//    await context.Response.WriteAsync("MiddelWare zwei");
+//    await next(context);
+//    await context.Response.WriteAsync("MiddelWare zwei-Nach");
+//    //Next To the Request
+//});
+//app.UseMiddleware<CustomeMidelware>();
+app.UseMycustomeMiddelWare();
+//app.UseMiddleware<ConvenstionlMiddelWare>();
+app.useConvenstionlMiddelWare();
+app.UseWhen(context => context.Request.Query.ContainsKey("username"), ApplicationBuilder =>
 {
-    //context.Response.Headers.ContentType = "Text/Html";
-    //if (context.Request.Method =="GET")
-    //{
-    //    if (context.Request.Query.ContainsKey("id"))
-    //    {
-    //        var id = context.Request.Query["id"];
-    //        await context.Response.WriteAsync($"<h1> id ==> {id} </h1>");
-    //    }
-    //}
+    ApplicationBuilder.Use(async (context, @delegate) =>
+    {
+        await context.Response.WriteAsync("USeWhen");
+        await @delegate();
+    });
+});
+app.Run(async context =>
+    {
+        await context.Response.WriteAsync("  =>  3");
 
-    var reader = new StreamReader(context.Request.Body);
-    var body = await reader.ReadToEndAsync();
-    var data = QueryHelpers.ParseQuery(body);
+        //End of Request
 
+    }
 
-} );
-
+);
 app.Run();
