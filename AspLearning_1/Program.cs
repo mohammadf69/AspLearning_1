@@ -88,6 +88,36 @@ app.UseOutputCache();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+//app.UseEndpoints(Endpoint =>
+//{
+//    Endpoint.Map("file/{fileName}.{exteion}", async (context) =>
+//    {
+//        await context.Response.WriteAsync("This is File");
+//    });
+//});
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.Map("Employy/Profile/{USerName:bool}", async context =>
+    {
+        var fileName = context.Request.RouteValues["USerName"];
+
+        await context.Response.WriteAsync($"File Requested: {fileName}");
+    });
+    endpoints.Map("Products/SaleLoadBarCode/{ID:int:min(1):max(10)}", async(contxt) =>
+    {
+        var id = contxt.Request.RouteValues["ID"]??5;
+        await contxt.Response.WriteAsync($"id => {id}");
+    });
+    //endpoints.Map("Products/SaleLoadBarCode/{ID?}", async (contxt) =>
+    //{
+    //    var id = contxt.Request.RouteValues["ID"];
+    //    await contxt.Response.WriteAsync($"id => {id}");
+    //});
+
+});
+
 //app.Use(async (context, @delegate) =>
 //{
 //    //Before Logic
@@ -105,9 +135,9 @@ app.MapControllerRoute(
 //    //Next To the Request
 //});
 //app.UseMiddleware<CustomeMidelware>();
-app.UseMycustomeMiddelWare();
+//app.UseMycustomeMiddelWare();
 //app.UseMiddleware<ConvenstionlMiddelWare>();
-app.useConvenstionlMiddelWare();
+//app.useConvenstionlMiddelWare();
 app.UseWhen(context => context.Request.Query.ContainsKey("username"), ApplicationBuilder =>
 {
     ApplicationBuilder.Use(async (context, @delegate) =>
@@ -116,13 +146,13 @@ app.UseWhen(context => context.Request.Query.ContainsKey("username"), Applicatio
         await @delegate();
     });
 });
-app.Run(async context =>
-    {
-        await context.Response.WriteAsync("  =>  3");
+//app.Run(async context =>
+//    {
+//        await context.Response.WriteAsync("  =>  3");
 
-        //End of Request
+//        //End of Request
 
-    }
+//    }
 
-);
+//);
 app.Run();
