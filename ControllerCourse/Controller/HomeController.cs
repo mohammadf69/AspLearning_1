@@ -1,29 +1,53 @@
 ﻿using ControllerCourse.Json;
+using ControllerCourse.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace ControllerCourse.Controller;
 
 public class HomeController:Microsoft.AspNetCore.Mvc.Controller
 {
-    [Route("/")]
-    [Route("Index")]
-    public JsonResult Index()
+    //[Route("/")]
+    ////Rout
+    //[Route("Index/{pageId:int?}/{searchBy}")]
+    ////query string
+    //[Route("Index")]
+    ////query string =http://localhost:43062/Index/?pageId=10&searchby=MOhammadFatahi
+    ////Route Data =http://localhost:43062/Index/10/MOhammadFatahi
+    ////MIx =http://localhost:43062/Index/1?&searchBy=d
+
+
+    //query string
+    public IActionResult IndexQueryString([FromQuery]int? pageId  , [FromQuery] string searchBy)
     {
-        ////return new  ContentResult()
-        ////{
-        ////    ContentType = "Text/plain",
-        ////    StatusCode = 200,
-        ////    Content = " das Ist mein Computer"
-        ////};
-        //return Content("<h1> das ist einen Inhalt </h1>","text/html" ,Encoding.UTF8);
-        var country = new Country { Id = 1, Title = "Germany", Desc = "Deutch Land" };
 
-        return new JsonResult(country);
-
+        return this.Content($"Page ID is => {pageId} & SearchBy => {searchBy}");
 
     }
+    //Rout
+    public IActionResult IndexRout([FromRoute] int? pageId, [FromRoute] string searchBy)
+    {
+
+        return this.Content($"Page ID is => {pageId} & SearchBy => {searchBy}");
+
+    }
+    //FromRoute
+    [Route("/")]
+    [Route("IndexParameters/{pageId:int?}/{searchBy}")]
+    //query string
+    [Route("/")]
+    [Route("IndexParameters")]
+    //query string
+
+
+    public IActionResult IndexParameters(IndexParameters indexParameters)
+    {
+
+        return this.Content($"Page ID is => {indexParameters.PageId} & SearchBy => {indexParameters.SearchBy}");
+
+    }
+
     public IActionResult Index1()
     {
         
