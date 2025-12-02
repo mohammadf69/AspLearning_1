@@ -1,26 +1,36 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
-namespace AspLearning_1.Attrebutes;
-
-public class ValidationEmailAttribute(string allowDomain,string errorMessage):ValidationAttribute
+public class ValidationEmailAttribute : ValidationAttribute
 {
-    private readonly string _allowDomain = allowDomain;
-    private readonly string _errorMessage = errorMessage;
+    private readonly string _allowDomain;
 
-
-    public override bool IsValid(object? value)
+    public ValidationEmailAttribute(string allowDomain, string errorMessage)
     {
-        var split = value?.ToString()!.Split('@');
+        if (string.IsNullOrWhiteSpace(allowDomain))
+            throw new ArgumentException("allowDomain نمی‌تواند خالی باشد.", nameof(allowDomain));
 
-        return string.Equals(split[1], this._allowDomain, StringComparison.CurrentCulture);
+        _allowDomain = allowDomain.Trim();
+        ErrorMessage = errorMessage ?? "ایمیل نامعتبر است.";
     }
 
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
-        var split = value?.ToString()!.Split('@');
-        var result = string.Equals(split[1], this._allowDomain, StringComparison.CurrentCulture);
-        if(result)return ValidationResult.Success;
-        return new ValidationResult(string.Format(ErrorMessage ?? "..."));
-        
+        // مقدار خالی را نامعتبر در نظر می‌گیریم (یا اگر خواستی می‌توانیم اجازه دهیم و بررسی را نکنیم)
+        if (value is null)
+            return new ValidationResult(ErrorMessage);
+
+        var email = value.ToString()!.Trim();
+
+        // بررسی ساده و امن برای وجود یک '@' و قسمت دامنه
+        var parts = email.Split('@');
+        if (parts.Length != 2 || string.IsNullOrWhiteSpace(parts[0]) || string.IsNullOrWhiteSpace(parts[1]))
+            return new ValidationResult(ErrorMessage);
+
+        // مقایسه دامنه (حساس به حروف نیست)
+        if (!string.Equals(parts[1], _allowDomain, StringComparison.OrdinalIgnoreCase))
+            return new ValidationResult(ErrorMessage);
+
+        return ValidationResult.Success;
     }
 }
