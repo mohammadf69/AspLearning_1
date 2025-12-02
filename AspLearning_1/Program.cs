@@ -1,6 +1,7 @@
 
 
 using System;
+using AspLearning_1.Binder;
 using AspLearning_1.Context;
 using AspLearning_1.InterFaces;
 using AspLearning_1.MiddelWares;
@@ -21,11 +22,15 @@ using AspLearning_1.MiddelWares;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(option =>
+{
+    //add new provider
+    option.ModelBinderProviders.Insert(0,new CourseBinderProvider());
+});
 var logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console().WriteTo
     .File("Logs/log-.txt", rollingInterval: RollingInterval.Day).CreateLogger();
 
-
+ 
 
 builder.Services.AddTransient<IUnitOfWork,UnitOfWork>();
 builder.Services.AddElmah<SqlErrorLog>(opt =>

@@ -1,20 +1,21 @@
-﻿using System;
+﻿using AspLearning_1.Context;
+using AspLearning_1.Entites;
+using AspLearning_1.Extensions;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using AspLearning_1.Context;
-using AspLearning_1.Entites;
-using AspLearning_1.Extensions;
-using Microsoft.AspNetCore.OutputCaching;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace AspLearning_1.Controllers
 {
     using AspLearning_1.Attrebutes;
+    using AspLearning_1.Binder;
     using AspLearning_1.InterFaces;
     using AspLearning_1.Services;
 
@@ -74,7 +75,7 @@ namespace AspLearning_1.Controllers
 
         [HttpPost]
        
-        public IActionResult Create( Course course)
+        public IActionResult Create([Bind(nameof(course.AuthorId),nameof(course.Author))] Course course)
             {
             if (uow.Repository<Course>().Any(x=>x.Titele == course.Titele))
             {
@@ -105,9 +106,9 @@ namespace AspLearning_1.Controllers
             return View(course);
         }
 
-     
+      
         [HttpPost]
-        public IActionResult Edit(int id, Course course)
+        public IActionResult Edit(int id,Course course)
         {
             if (id != course.id) return NotFound();
             ViewData["AuthorId"] = new SelectList(uow.Repository<Author>().GetAll(), "Id", "Name", course.AuthorId);

@@ -1,4 +1,7 @@
-﻿namespace AspLearning_1.Entites;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+
+namespace AspLearning_1.Entites;
 
 using AspLearning_1.Attrebutes;
 using System.ComponentModel.DataAnnotations;
@@ -10,11 +13,12 @@ public class Author:IValidatableObject
     public int Id { get;  set; }
 
     [Range(10,80,ErrorMessage = "dd")]
+    [BindNever]
     public int Age { get; set; }
 
     public string  Name { get; set; }
-    [ValidationEmailAttribute("Gmail.com","dddd")]
-    public string  Email { get; set; }
+    //[ValidationEmailAttribute("Gmail.com","dddd")]
+    //public string  Email { get; set; }
 
 
 
@@ -23,7 +27,7 @@ public class Author:IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        var split = Email.Split('@');
+        var split = Name.Split('@');
       var result =  string.Equals(split[1], "Gamil.com", StringComparison.CurrentCulture);
       if (result) yield return new ValidationResult("Insert Key Value");
     }
